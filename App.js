@@ -1,11 +1,12 @@
 import { NavigationContaier } from '@react-navigation/native';
-import { createNativeNavigator } from '@react-navigation/native-stack';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 const Stack = createNativeStackNavigator();
 
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 
+import ShoppingLists from './components/ShoppingLists';
 
 const App = () => {
 
@@ -27,10 +28,15 @@ const App = () => {
 
   return(
     <NavigationContaier>
-      <Stack.Navigator>
+      <Stack.Navigator
+        initialRouteName="ShoppingLists">
+        <Stack.Screen
+          name="ShoppingLists"
+        />
+          {props => <ShoppingLists db={db} {...props} />}
       </Stack.Navigator>
     </NavigationContaier>
-  )
+  );
 
 }
 export default App;
