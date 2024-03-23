@@ -1,4 +1,4 @@
-import { NavigationContaier } from '@react-navigation/native';
+import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 const Stack = createNativeStackNavigator();
@@ -27,15 +27,16 @@ const App = () => {
   const db = getFirestore(app);
 
   return(
-    <NavigationContaier>
+    <NavigationContainer>
       <Stack.Navigator
         initialRouteName="ShoppingLists">
         <Stack.Screen
-          name="ShoppingLists"
-        />
+          name="ShoppingLists"  
+        >
           {props => <ShoppingLists db={db} {...props} />}
+        </Stack.Screen>
       </Stack.Navigator>
-    </NavigationContaier>
+    </NavigationContainer>
   );
 
 }
