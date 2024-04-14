@@ -5,7 +5,7 @@ import { collection, getDocs, addDoc, onSnapshot, query, where } from 'firebase/
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const ShoppingLists = ({ db, route }) => {
+const ShoppingLists = ({ db, route, isConnected }) => {
   const { userID } = route.params;
 
   const [lists, setLists] = useState([]);
@@ -32,21 +32,36 @@ const ShoppingLists = ({ db, route }) => {
     }
   }
 
-  useEffect (() => {
-    const q = query(collection(db, "shoppinglists"), where("uid", "==", userID));
-    const unsubShoppinglists = onSnapshot(q, (documentsSnapshot) => {
-      let newLists = [];
-      documentsSnapshot.forEach(doc => {
-        newLists.push({ id: doc.id, ...doc.data() })
-      });
-      cacheShoppingLists(newLists);
-      setLists(newLists);
-    });
+  const loadCachedLists = async () => {
+    const cachedLists = await AsyncStorage.getItem("shopping_lists") || [];
+    setLists(JSON.parse(cachedLists));
+  }
 
-    return () => {
-      if (unsubShoppinglists) unsubShoppinglists();
-    }
-  }, []);
+  let unsubShoppinglists;
+
+  useEffect (() => {
+    
+    if (isConnected === true) {
+
+      if(unsubShoppinglists) unsubShoppinglists();
+      unsubShoppinglists = null;
+
+      const q = query(collection(db, "shoppinglists"), where("uid", "==", userID));
+      unsubShoppinglists = onSnapshot(q, (documentsSnapshot) => {
+        let newLists = [];
+        documentsSnapshot.forEach(doc => {
+          newLists.push({ id: doc.id, ...doc.data() })
+        });
+        cacheShoppingLists(newLists);
+        setLists(newLists);
+      });
+      // will fetch from Firestore Database otherwise will fetch from AsyncStorage
+    } else loadCachedLists();
+
+      return () => {
+        if (unsubShoppinglists) unsubShoppinglists();
+      } 
+  }, [isConnected]);
 
   const cacheShoppingLists = async (listsToCache) => {
     try {
@@ -66,6 +81,8 @@ const ShoppingLists = ({ db, route }) => {
             <Text>{item.name}: {item.items.join(", ")}</Text>
           </View>
         } />
+
+     {(isConnected === true) ?   
       <View style={styles.listForm}>
         <TextInput
           style={styles.listName}
@@ -98,7 +115,8 @@ const ShoppingLists = ({ db, route }) => {
           >
             <Text style={styles.addButtonText}>Add</Text>
           </TouchableOpacity>
-      </View>
+      </View> : null
+     }
       {Platform.OS === "ios" ? <KeyboardAvoidingView behavior="padding" /> : null}
     </View>
   );
